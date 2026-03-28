@@ -10,13 +10,13 @@ The workflow covers the full pipeline:
 - training machine learning models
 - deploying the result in a Flask web application
 
-The final product is a rent prediction tool that returns a practical rent band instead of pretending to know one exact “perfect” price.
+The final product is a rent prediction tool that returns an estimated rent together with a practical market range.
 
 ---
 
 ## Project Goal
 
-The main goal of this project is not just to train a model.
+The goal of this project is not just to train a model.
 
 It is to take unreliable property listing data and turn it into a useful decision-support tool for:
 - renters
@@ -43,7 +43,9 @@ The data preparation process included:
 - handling missing values
 - standardizing categories such as neighborhood, furnishing, and property condition
 - removing duplicate listings
-- engineering useful features for modeling
+- preparing raw features for machine learning
+
+One important improvement in the final version was removing duplicate listings before model training, which helped make the model more reliable.
 
 This project shows the practical side of data science: most of the real work happens before model training.
 
@@ -51,54 +53,51 @@ This project shows the practical side of data science: most of the real work hap
 
 ## The Machine Learning Approach
 
-Several modeling directions were explored for rent estimation.
-
-At first, the project focused on exact price prediction using regression models such as:
+Several modeling directions were explored for rent estimation, including:
 - Linear Regression
 - Random Forest
 - Gradient Boosting
 
-However, due to dataset limitations like:
-- small sample size
-- duplicated patterns
-- inconsistent listing quality
-- missing important real-estate features
+The final deployed version uses a **Gradient Boosting Regressor** trained on the cleaned raw dataset through a preprocessing pipeline.
 
-exact-price prediction was not reliable enough for a user-facing product.
+The model uses:
+- numeric features such as bedrooms, bathrooms, toilets, and size
+- categorical features such as neighborhood, furnishing, property type, and condition
+- automatic preprocessing with imputing and one-hot encoding inside the pipeline
 
-So the deployed version was reframed into a **rent-band prediction system**.
+Instead of showing only one exact predicted value, the web app presents:
+- a central estimated rent
+- a practical fair market range around that estimate
 
-Instead of returning one exact rent figure, the app predicts a more realistic category such as:
-- Budget
-- Lower Mid
-- Upper Mid
-- High End
-- Luxury
-
-This makes the output more honest, more stable, and more useful for users.
+This makes the output more realistic and safer for user decision-making.
 
 ---
 
 ## Current Model Output
 
-The web app predicts a rent band and displays a practical rent range.
+The web app predicts:
+- an estimated annual rent
+- a lower market bound
+- an upper market bound
 
-Current custom rent bands:
-- `Budget`: ₦0 - ₦1.5M
-- `Lower Mid`: ₦1.5M - ₦3M
-- `Upper Mid`: ₦3M - ₦5M
-- `High End`: ₦5M - ₦8M
-- `Luxury`: ₦8M+
+The displayed range is based on the model prediction:
+- lower bound: about `-20%`
+- upper bound: about `+25%`
 
-This is more useful than returning a fake-precise number from a small noisy dataset.
+This helps users treat the result as a negotiation and market guidance tool, not as a perfectly exact valuation.
 
 ---
 
 ## Model Performance
 
-Because the dataset is relatively small and imperfect, the goal was not to chase unrealistic accuracy.
+After cleaning the data and removing duplicates, the model achieved approximately:
 
-The stronger result in practice was a band-based classification model rather than an exact-price regressor.
+- Holdout MAE: `₦1,800,525.51`
+- Holdout R²: `0.6105`
+- 5-Fold Cross-Validation MAE: `₦1,704,828.83`
+- 5-Fold Cross-Validation R²: `0.5874`
+
+These results are not perfect, but they are realistic for a small real-world property dataset with noisy listings.
 
 ### Why the Model Has Limits
 
