@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Rent Predictor | Port Harcourt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b1120;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+            --purple: #8b5cf6;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-main);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.15), transparent 25%);
+        }
+
+        .navbar {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 20px;
+        }
+
+        .navbar a:hover {
+            color: var(--accent);
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+        }
+
+        .header-text {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-text h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .header-text p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px var(--accent-glow);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(139, 92, 246, 0.5);
+        }
+
+        .result-box {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            border: 1px dashed var(--purple);
+            text-align: center;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-title {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-price {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 10px 0;
+            background: linear-gradient(90deg, #38bdf8, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .result-note {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="font-weight: 800; letter-spacing: 1px;">DAVID OLUFEMI</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/analysis">Market Analysis</a>
+            <a href="/predictor" style="color: var(--accent);">ML Predictor</a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="glass-card">
+            <div class="header-text">
+                <h1>Rent AI Predictor</h1>
+                <p>Trained on cleaned Port Harcourt real estate listings.</p>
+            </div>
+
+            <form id="predictForm">
+                <div class="input-group">
+                    <label>Neighborhood</label>
+                    <select id="neighborhood" required>
+                        <option value="GRA / Eagle Island">GRA / Eagle Island</option>
+                        <option value="Eliozu / Rumuodara / Rumuibekwe">Eliozu / Rumuodara</option>
+                        <option value="Peter Odili / Trans Amadi / Abuloma">Peter Odili / Trans Amadi</option>
+                        <option value="Ada George / Agip / NTA">Ada George / Agip / NTA</option>
+                        <option value="Stadium / Rumuomasi / Olu Obasanjo">Stadium / Rumuomasi</option>
+                        <option value="Choba / Ozuoba">Choba / Ozuoba</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Number of Bedrooms</label>
+                    <input type="number" id="bedrooms" min="1" max="6" value="3" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Property Type</label>
+                    <select id="property_type" required>
+                        <option value="Apartment/Flat">Apartment/Flat</option>
+                        <option value="Duplex">Duplex</option>
+                        <option value="Bungalow">Bungalow</option>
+                        <option value="Self Contain / Studio">Self Contain / Studio</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Property Condition</label>
+                    <select id="condition" required>
+                        <option value="Newly-Built">Newly-Built</option>
+                        <option value="Fairly Used">Fairly Used</option>
+                        <option value="Renovated">Renovated</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Furnishing Status</label>
+                    <select id="furnishing" required>
+                        <option value="Unfurnished">Unfurnished</option>
+                        <option value="Furnished">Furnished</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit">Calculate Fair Market Rent</button>
+            </form>
+
+            <div class="loader" id="loader">Calculating market dynamics...</div>
+
+            <div class="result-box" id="resultBox">
+                <div class="result-title">Estimated Fair Market Range</div>
+                <div class="result-price" id="priceRange">&#8358;0 - &#8358;0</div>
+                <div class="result-note">This estimate shows a practical range around the model's predicted rent.</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+
+            const payload = {
+                neighborhood: document.getElementById('neighborhood').value,
+                bedrooms: document.getElementById('bedrooms').value,
+                property_type: document.getElementById('property_type').value,
+                condition: document.getElementById('condition').value,
+                furnishing: document.getElementById('furnishing').value
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    if (data.status === 'success') {
+                        document.getElementById('priceRange').innerText = `${data.range_lower} - ${data.range_upper}`;
+                        document.getElementById('resultBox').style.display = 'block';
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                }, 800);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Something went wrong contacting the AI.');
+                document.getElementById('loader').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

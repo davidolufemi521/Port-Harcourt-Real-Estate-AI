@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David Olufemi | Data Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b1120;
+            --accent: #38bdf8;
+            --purple: #8b5cf6;
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-main);
+            color: white;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.1), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.1), transparent 30%);
+        }
+
+        .navbar {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar .logo { font-weight: 800; letter-spacing: 1px; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        /* Hero Section */
+        .hero { text-align: center; margin-bottom: 80px; }
+        .hero h1 { font-size: 3.2rem; margin-bottom: 20px; line-height: 1.2; }
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 1.2rem; color: #94a3b8; max-width: 750px; margin: 0 auto; }
+
+        /* Project Portals (The Two Big Buttons) */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 100px;
+        }
+
+        .portal-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 50px 30px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .portal-card:hover::before { opacity: 1; }
+        .portal-card h2 { font-size: 2rem; margin-bottom: 15px; }
+        .portal-card p { color: #cbd5e1; font-size: 1.1rem; }
+
+        /* About Me Section */
+        .about-section {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 30px;
+            padding: 60px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .about-section h2 { font-size: 2.5rem; margin-bottom: 10px; }
+        .about-subtitle { color: var(--accent); font-size: 1.2rem; margin-bottom: 40px; font-weight: 600;}
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .skill-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+        }
+
+        .skill-card h3 { color: white; margin-top: 0; font-size: 1.2rem; }
+        .skill-card p { color: #94a3b8; font-size: 0.95rem; }
+
+        .btn-social {
+            display: inline-block;
+            background: linear-gradient(135deg, #0077b5, #00a0dc);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 119, 181, 0.2);
+        }
+
+        .btn-social:hover { transform: scale(1.05); }
+
+        @media (max-width: 768px) {
+            .portal-grid, .skills-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2.2rem; }
+            .about-section { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">DAVID OLUFEMI</div>
+        <div>
+            <a href="/analysis" style="color: white; text-decoration: none; margin-right: 20px; font-weight: 600;">Market Analysis</a>
+            <a href="/predictor" style="color: white; text-decoration: none; font-weight: 600;">ML Predictor</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="hero">
+            <h1>I Analyzed and Built a <br><span>Machine Learning System</span><br> for Rent Prediction.</h1>
+            <p>I scraped real rental data from Port Harcourt, fixed messy listings, and trained a model to estimate what a property should actually cost. This project shows how I take raw data and turn it into something useful.</p>
+        </div>
+
+        <div class="portal-grid">
+            <a href="/analysis" class="portal-card">
+                <h2>📊 Market Analysis Report</h2>
+                <p>What the Port Harcourt rental market actually looks like. Explore the trends, locations, and the key factors pushing prices up or down.</p>
+            </a>
+            
+            <a href="/predictor" class="portal-card">
+                <h2>🔮 AI Price Predictor</h2>
+                <p>Enter property details and get a rent estimate instantly. Powered by the machine learning model I built from real market data.</p>
+            </a>
+        </div>
+
+        <div class="about-section">
+            <h2>About The Developer</h2>
+            <div class="about-subtitle">I’m David Olufemi. I work across automation, machine learning, and data analysis.</div>
+            
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <h3>Python Automation</h3>
+                    <p>I build applications that remove repetitive tasks from business workflows. If something is being done manually again and again, I automate it.</p>
+                </div>
+                
+                <div class="skill-card">
+                    <h3>Machine Learning</h3>
+                    <p>I build models that solve real problems and not just pass tests. I focus on clean data, proper validation, and models that do not break in real use.</p>
+                </div>
+                
+                <div class="skill-card">
+                    <h3>Data Analysis</h3>
+                    <p>I break down data to find what actually matters. I turn raw numbers into clear insights that help businesses make better decisions.</p>
+                </div>
+            </div>
+
+            <p style="color: #cbd5e1; margin-bottom: 25px; font-size: 1.1rem;"><strong>Let’s connect.</strong> Reach out if you are hiring, building something, or just want to talk.</p>
+            
+            <a href="https://www.linkedin.com/in/YOUR-LINKEDIN-ID" target="_blank" class="btn-social">Reach out on LinkedIn</a>
+        </div>
+
+    </div>
+
+</body>
+</html>
