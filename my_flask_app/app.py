@@ -3,14 +3,17 @@ from pathlib import Path
 from flask import Flask, jsonify, render_template, request
 import joblib
 import pandas as pd
-
+import os
 
 app = Flask(__name__)
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load the trained regression pipeline artifacts.
-model = joblib.load(BASE_DIR / "rivers_rent_model.pkl")
-model_features = joblib.load(BASE_DIR / "model_features.pkl")
+
+# This tells the app to look in the exact folder where app.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load the AI Brain and Features
+model = joblib.load(os.path.join(BASE_DIR, "rivers_rent_model.pkl"))
+model_features = joblib.load(os.path.join(BASE_DIR, "model_features.pkl"))
 
 
 @app.route("/")
