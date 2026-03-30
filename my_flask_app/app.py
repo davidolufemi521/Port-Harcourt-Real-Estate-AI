@@ -35,40 +35,38 @@ def predict():
     try:
         data = request.json
 
-        # 1. Start with true mathematical blanks (np.nan) instead of 'None'
-        input_df = pd.DataFrame([{feature: np.nan for feature in model_features}])
-
-        # 2. Safely extract data from the web form
-        def get_val(key):
+        # 1. Helper to safely extract and convert data from the web form
+        def get_val(key, is_numeric=False):
             val = data.get(key)
-            # If the user left it blank, return np.nan
             if val is None or str(val).strip() == "":
                 return np.nan
-            return val
+            if is_numeric:
+                return float(val) # Forces the text '4' to become a math 4.0
+            return str(val)
 
-        if "bedrooms" in input_df.columns:
-            input_df.at[0, "bedrooms"] = get_val("bedrooms")
-        if "neighborhood" in input_df.columns:
-            input_df.at[0, "neighborhood"] = get_val("neighborhood")
-        if "property_type_clean" in input_df.columns:
-            input_df.at[0, "property_type_clean"] = get_val("property_type")
-        if "condition" in input_df.columns:
-            input_df.at[0, "condition"] = get_val("condition")
-        if "furnishing" in input_df.columns:
-            input_df.at[0, "furnishing"] = get_val("furnishing")
+        # 2. Build the data as a simple dictionary first (no strict Pandas rules yet)
+        input_dict = {feature: np.nan for feature in model_features}
 
-        # 3. Force numeric columns to be numbers, not text!
-        numeric_cols = ["bedrooms", "bathrooms", "toilets", "size_sqm"]
-        for col in numeric_cols:
-            if col in input_df.columns:
-                input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
+        # 3. Fill the dictionary
+        if "bedrooms" in input_dict:
+            input_dict["bedrooms"] = get_val("bedrooms", is_numeric=True)
+        if "neighborhood" in input_dict:
+            input_dict["neighborhood"] = get_val("neighborhood")
+        if "property_type_clean" in input_dict:
+            input_dict["property_type_clean"] = get_val("property_type")
+        if "condition" in input_dict:
+            input_dict["condition"] = get_val("condition")
+        if "furnishing" in input_dict:
+            input_dict["furnishing"] = get_val("furnishing")
 
-        # 4. Make the prediction (SimpleImputer will now catch the NaNs properly!)
+        # 4. NOW convert it to a DataFrame. Pandas will automatically handle the types!
+        input_df = pd.DataFrame([input_dict])
+
+        # 5. Make the prediction
         base_prediction = float(model.predict(input_df)[0])
 
-        # 5. Safety net for implausibly low values
-        # We safely get the bedrooms (default to 1 if it was left blank)
-        bed_count = input_df.at[0, "bedrooms"]
+        # 6. Safety net for implausibly low values
+        bed_count = input_dict.get("bedrooms")
         if pd.isna(bed_count):
             bed_count = 1 
             
