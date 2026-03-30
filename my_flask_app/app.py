@@ -30,38 +30,50 @@ def predictor():
 def show_analysis():
     return render_template("analysis.html")
 
-
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.json
 
-        # Build one raw input row and let the saved sklearn pipeline preprocess it.
-        input_df = pd.DataFrame(
-            [{feature: None for feature in model_features}],
-            dtype=object,
-        )
+        # 1. Start with true mathematical blanks (np.nan) instead of 'None'
+        input_df = pd.DataFrame([{feature: np.nan for feature in model_features}])
+
+        # 2. Safely extract data from the web form
+        def get_val(key):
+            val = data.get(key)
+            # If the user left it blank, return np.nan
+            if val is None or str(val).strip() == "":
+                return np.nan
+            return val
 
         if "bedrooms" in input_df.columns:
-            input_df.at[0, "bedrooms"] = int(data["bedrooms"])
+            input_df.at[0, "bedrooms"] = get_val("bedrooms")
         if "neighborhood" in input_df.columns:
-            input_df.at[0, "neighborhood"] = data.get("neighborhood")
+            input_df.at[0, "neighborhood"] = get_val("neighborhood")
         if "property_type_clean" in input_df.columns:
-            input_df.at[0, "property_type_clean"] = data.get("property_type")
+            input_df.at[0, "property_type_clean"] = get_val("property_type")
         if "condition" in input_df.columns:
-            input_df.at[0, "condition"] = data.get("condition")
+            input_df.at[0, "condition"] = get_val("condition")
         if "furnishing" in input_df.columns:
-            input_df.at[0, "furnishing"] = data.get("furnishing")
-        
-        input_df = input_df.replace(r'^\s*$', np.nan, regex=True)
+            input_df.at[0, "furnishing"] = get_val("furnishing")
 
+        # 3. Force numeric columns to be numbers, not text!
+        numeric_cols = ["bedrooms", "bathrooms", "toilets", "size_sqm"]
+        for col in numeric_cols:
+            if col in input_df.columns:
+                input_df[col] = pd.to_numeric(input_df[col], errors='coerce')
 
-
+        # 4. Make the prediction (SimpleImputer will now catch the NaNs properly!)
         base_prediction = float(model.predict(input_df)[0])
 
-        # Safety net for implausibly low values.
+        # 5. Safety net for implausibly low values
+        # We safely get the bedrooms (default to 1 if it was left blank)
+        bed_count = input_df.at[0, "bedrooms"]
+        if pd.isna(bed_count):
+            bed_count = 1 
+            
         if base_prediction < 150000:
-            base_prediction = 150000 + (int(data["bedrooms"]) * 100000)
+            base_prediction = 150000 + (int(bed_count) * 100000)
 
         lower_bound = base_prediction * 0.80
         upper_bound = base_prediction * 1.25
@@ -80,7 +92,3 @@ def predict():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
