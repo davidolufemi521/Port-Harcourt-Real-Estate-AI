@@ -35,43 +35,44 @@ def predict():
     try:
         data = request.json
 
-        # 1. Helper to safely extract and convert data from the web form
-        def get_val(key, is_numeric=False):
+        # 1. Helper to safely grab data or return a SOLID fallback (No NaNs!)
+        def get_val(key, fallback, is_numeric=False):
             val = data.get(key)
             if val is None or str(val).strip() == "":
-                return np.nan
+                return fallback
             if is_numeric:
-                return float(val) # Forces the text '4' to become a math 4.0
+                return float(val)
             return str(val)
 
-        # 2. Build the data as a simple dictionary first (no strict Pandas rules yet)
-        input_dict = {feature: np.nan for feature in model_features}
+        # 2. Build the dictionary with fallback defaults for everything
+        input_dict = {}
+        for feature in model_features:
+            input_dict[feature] = 0  # Ultimate fallback for any random numeric columns
+            
+        # 3. Safely grab from the web form, using Port Harcourt baselines if they leave it blank
+        input_dict["bedrooms"] = get_val("bedrooms", fallback=1, is_numeric=True)
+        input_dict["neighborhood"] = get_val("neighborhood", fallback="Other Port Harcourt")
+        input_dict["property_type_clean"] = get_val("property_type", fallback="Apartment/Flat")
+        input_dict["condition"] = get_val("condition", fallback="Fairly Used")
+        input_dict["furnishing"] = get_val("furnishing", fallback="Unfurnished")
+        
+        # 4. Fill in the hidden columns the web form doesn't ask for!
+        if "bathrooms" in input_dict:
+            input_dict["bathrooms"] = input_dict["bedrooms"]
+        if "toilets" in input_dict:
+            input_dict["toilets"] = input_dict["bedrooms"] + 1
+        if "size_sqm" in input_dict:
+            input_dict["size_sqm"] = input_dict["bedrooms"] * 50
 
-        # 3. Fill the dictionary
-        if "bedrooms" in input_dict:
-            input_dict["bedrooms"] = get_val("bedrooms", is_numeric=True)
-        if "neighborhood" in input_dict:
-            input_dict["neighborhood"] = get_val("neighborhood")
-        if "property_type_clean" in input_dict:
-            input_dict["property_type_clean"] = get_val("property_type")
-        if "condition" in input_dict:
-            input_dict["condition"] = get_val("condition")
-        if "furnishing" in input_dict:
-            input_dict["furnishing"] = get_val("furnishing")
-
-        # 4. NOW convert it to a DataFrame. Pandas will automatically handle the types!
+        # 5. Convert to DataFrame. There are ZERO NaNs in this dictionary.
         input_df = pd.DataFrame([input_dict])
 
-        # 5. Make the prediction
+        # 6. Make the prediction!
         base_prediction = float(model.predict(input_df)[0])
 
-        # 6. Safety net for implausibly low values
-        bed_count = input_dict.get("bedrooms")
-        if pd.isna(bed_count):
-            bed_count = 1 
-            
+        # 7. Safety net for implausibly low values
         if base_prediction < 150000:
-            base_prediction = 150000 + (int(bed_count) * 100000)
+            base_prediction = 150000 + (int(input_dict["bedrooms"]) * 100000)
 
         lower_bound = base_prediction * 0.80
         upper_bound = base_prediction * 1.25
