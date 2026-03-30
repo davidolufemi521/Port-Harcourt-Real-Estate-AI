@@ -4,7 +4,7 @@ from flask import Flask, jsonify, render_template, request
 import joblib
 import pandas as pd
 import os
-
+import numpy as np
 app = Flask(__name__)
 
 
@@ -52,6 +52,10 @@ def predict():
             input_df.at[0, "condition"] = data.get("condition")
         if "furnishing" in input_df.columns:
             input_df.at[0, "furnishing"] = data.get("furnishing")
+        
+        input_df = input_df.replace(r'^\s*$', np.nan, regex=True)
+
+
 
         base_prediction = float(model.predict(input_df)[0])
 
