@@ -24,6 +24,12 @@ def home():
 @app.route("/predictor")
 def predictor():
     return render_template("predictor.html")
+
+
+@app.route("/analysis")
+def show_analysis():
+    return render_template("analysis.html")
+
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -79,8 +85,3 @@ def predict():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
-@app.route("/analysis")
-def show_analysis():
-    return render_template("analysis.html")
-
-status": "error", "message": str(e)})
