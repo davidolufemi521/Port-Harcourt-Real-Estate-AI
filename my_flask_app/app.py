@@ -24,62 +24,42 @@ def home():
 @app.route("/predictor")
 def predictor():
     return render_template("predictor.html")
-
-
-@app.route("/analysis")
-def show_analysis():
-    return render_template("analysis.html")
-
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.json
 
-        def get_val(key, fallback, is_numeric=False):
-            val = data.get(key)
-            if val is None or str(val).strip() == "":
-                return fallback
-            if is_numeric:
-                return float(val)
-            return str(val)
+        # Build one raw input row and let the saved sklearn pipeline preprocess it.
+        input_df = pd.DataFrame(
+            [{feature: None for feature in model_features}],
+            dtype=object,
+        )
 
-        # 1. Create a blank row with EXACTLY the encoded columns the model knows (all 0s)
-        input_dict = {feature: 0 for feature in model_features}
+        if "bedrooms" in input_df.columns:
+            # Safely handle if the user leaves the bedroom box blank
+            beds = data.get("bedrooms")
+            input_df.at[0, "bedrooms"] = int(beds) if beds and str(beds).strip() != "" else 1
             
-        # 2. Fill in the numbers
-        bedrooms = get_val("bedrooms", fallback=1, is_numeric=True)
-        if "bedrooms" in input_dict: input_dict["bedrooms"] = bedrooms
-        if "bathrooms" in input_dict: input_dict["bathrooms"] = bedrooms
-        if "toilets" in input_dict: input_dict["toilets"] = bedrooms + 1
-        if "size_sqm" in input_dict: input_dict["size_sqm"] = bedrooms * 50
+        if "neighborhood" in input_df.columns:
+            input_df.at[0, "neighborhood"] = data.get("neighborhood")
+        if "property_type_clean" in input_df.columns:
+            input_df.at[0, "property_type_clean"] = data.get("property_type")
+        if "condition" in input_df.columns:
+            input_df.at[0, "condition"] = data.get("condition")
+        if "furnishing" in input_df.columns:
+            input_df.at[0, "furnishing"] = data.get("furnishing")
 
-        # 3. THE MAGIC FIX: Flip the switch (0 to 1) for the correct encoded category!
-        neighborhood = get_val("neighborhood", fallback="Other Port Harcourt")
-        if f"neighborhood_{neighborhood}" in input_dict:
-            input_dict[f"neighborhood_{neighborhood}"] = 1
+        # Convert empty strings from the web form into None so your pipeline can impute them!
+        input_df = input_df.replace(r'^\s*$', None, regex=True)
 
-        property_type = get_val("property_type", fallback="Apartment/Flat")
-        if f"property_type_clean_{property_type}" in input_dict:
-            input_dict[f"property_type_clean_{property_type}"] = 1
-        elif f"property_type_{property_type}" in input_dict:
-            input_dict[f"property_type_{property_type}"] = 1
-
-        condition = get_val("condition", fallback="Fairly Used")
-        if f"condition_{condition}" in input_dict:
-            input_dict[f"condition_{condition}"] = 1
-
-        furnishing = get_val("furnishing", fallback="Unfurnished")
-        if f"furnishing_{furnishing}" in input_dict:
-            input_dict[f"furnishing_{furnishing}"] = 1
-
-        # 4. Convert to DataFrame (ZERO unseen columns now!)
-        input_df = pd.DataFrame([input_dict])
-
-        # 5. Make the prediction!
         base_prediction = float(model.predict(input_df)[0])
 
+        # Safety net for implausibly low values.
+        beds_for_calc = data.get("bedrooms")
+        beds_for_calc = int(beds_for_calc) if beds_for_calc and str(beds_for_calc).strip() != "" else 1
+        
         if base_prediction < 150000:
-            base_prediction = 150000 + (int(bedrooms) * 100000)
+            base_prediction = 150000 + (beds_for_calc * 100000)
 
         lower_bound = base_prediction * 0.80
         upper_bound = base_prediction * 1.25
@@ -98,3 +78,9 @@ def predict():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+
+@app.route("/analysis")
+def show_analysis():
+    return render_template("analysis.html")
+
+status": "error", "message": str(e)})
