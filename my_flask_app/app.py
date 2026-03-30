@@ -35,7 +35,6 @@ def predict():
     try:
         data = request.json
 
-        # 1. Helper to safely grab data or return a SOLID fallback (No NaNs!)
         def get_val(key, fallback, is_numeric=False):
             val = data.get(key)
             if val is None or str(val).strip() == "":
@@ -44,35 +43,43 @@ def predict():
                 return float(val)
             return str(val)
 
-        # 2. Build the dictionary with fallback defaults for everything
-        input_dict = {}
-        for feature in model_features:
-            input_dict[feature] = 0  # Ultimate fallback for any random numeric columns
+        # 1. Create a blank row with EXACTLY the encoded columns the model knows (all 0s)
+        input_dict = {feature: 0 for feature in model_features}
             
-        # 3. Safely grab from the web form, using Port Harcourt baselines if they leave it blank
-        input_dict["bedrooms"] = get_val("bedrooms", fallback=1, is_numeric=True)
-        input_dict["neighborhood"] = get_val("neighborhood", fallback="Other Port Harcourt")
-        input_dict["property_type_clean"] = get_val("property_type", fallback="Apartment/Flat")
-        input_dict["condition"] = get_val("condition", fallback="Fairly Used")
-        input_dict["furnishing"] = get_val("furnishing", fallback="Unfurnished")
-        
-        # 4. Fill in the hidden columns the web form doesn't ask for!
-        if "bathrooms" in input_dict:
-            input_dict["bathrooms"] = input_dict["bedrooms"]
-        if "toilets" in input_dict:
-            input_dict["toilets"] = input_dict["bedrooms"] + 1
-        if "size_sqm" in input_dict:
-            input_dict["size_sqm"] = input_dict["bedrooms"] * 50
+        # 2. Fill in the numbers
+        bedrooms = get_val("bedrooms", fallback=1, is_numeric=True)
+        if "bedrooms" in input_dict: input_dict["bedrooms"] = bedrooms
+        if "bathrooms" in input_dict: input_dict["bathrooms"] = bedrooms
+        if "toilets" in input_dict: input_dict["toilets"] = bedrooms + 1
+        if "size_sqm" in input_dict: input_dict["size_sqm"] = bedrooms * 50
 
-        # 5. Convert to DataFrame. There are ZERO NaNs in this dictionary.
+        # 3. THE MAGIC FIX: Flip the switch (0 to 1) for the correct encoded category!
+        neighborhood = get_val("neighborhood", fallback="Other Port Harcourt")
+        if f"neighborhood_{neighborhood}" in input_dict:
+            input_dict[f"neighborhood_{neighborhood}"] = 1
+
+        property_type = get_val("property_type", fallback="Apartment/Flat")
+        if f"property_type_clean_{property_type}" in input_dict:
+            input_dict[f"property_type_clean_{property_type}"] = 1
+        elif f"property_type_{property_type}" in input_dict:
+            input_dict[f"property_type_{property_type}"] = 1
+
+        condition = get_val("condition", fallback="Fairly Used")
+        if f"condition_{condition}" in input_dict:
+            input_dict[f"condition_{condition}"] = 1
+
+        furnishing = get_val("furnishing", fallback="Unfurnished")
+        if f"furnishing_{furnishing}" in input_dict:
+            input_dict[f"furnishing_{furnishing}"] = 1
+
+        # 4. Convert to DataFrame (ZERO unseen columns now!)
         input_df = pd.DataFrame([input_dict])
 
-        # 6. Make the prediction!
+        # 5. Make the prediction!
         base_prediction = float(model.predict(input_df)[0])
 
-        # 7. Safety net for implausibly low values
         if base_prediction < 150000:
-            base_prediction = 150000 + (int(input_dict["bedrooms"]) * 100000)
+            base_prediction = 150000 + (int(bedrooms) * 100000)
 
         lower_bound = base_prediction * 0.80
         upper_bound = base_prediction * 1.25
